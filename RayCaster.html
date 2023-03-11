@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+}
+</style>
+</head>
+<body onload="startGame()">
+<script>
+
+var myGamePiece;
+
+//globals
+const toRadians = 0.017453;
+
+
+function startGame() {
+    myGamePiece = new component(380,320);
+    myGameArea.start();
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 1600;
+        this.canvas.height = 600;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.interval = setInterval(updateGameArea, 20);
+    },
+    clear : function() {
+
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+    }
+}
+
+
+
+function component(x, y) {
+    
+    this.x = x;
+    this.y = y;    
+    this.angle = 180;
+
+
+    const arr = [
+    1,1,1,1,1,1,1,1,
+    1,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,0,0,2,0,1,
+    1,0,0,0,0,1,0,1,    
+    1,1,1,1,1,1,1,1
+    ];
+    
+    
+    
+    this.update = function() 
+    {
+        ctx = myGameArea.context;
+        ctx.beginPath();
+        ctx.strokeStyle = "#FF0000";
+        debug = "";
+
+
+
+        boxWidth = (myGameArea.context.canvas.width / 2) / 8
+        boxHeight = (myGameArea.context.canvas.height) / 8
+
+        
+        sqaurex = Math.round((this.x / (myGameArea.context.canvas.width / 2)) * 8 + 0.5) - 1
+        sqaurey = (Math.round(((this.y / myGameArea.context.canvas.height) * 8)+ 0.5)) - 1 ;
+        sqaure = sqaurex + (sqaurey * 8);
+
+      
+        
+
+
+        
+        
+        //      180
+        //270           90
+        //      0
+        fov = 90
+        scanCounter = -(fov/2);
+        scanAngle = this.angle + scanCounter;
+
+        
+        while(scanCounter < (fov/2))
+        {
+            distance = 0;
+            distance1 = 0;
+            distance2 = 0;
+
+            
+            scanAngle = scanAngle + 1;
+            if (scanAngle > 360) scanAngle = scanAngle - 360;
+            if (scanAngle < 0) scanAngle = scanAngle + 360;
+            
+
+            
+            pixelx =  this.x - (boxWidth * sqaurex );
+            pixely =  this.y - (boxHeight * sqaurey );
+            
+            
+            counter = 0;
+            checkSquarex = sqaurex;
+            checkSquarey = sqaurey;
+            checkSquare = 0;
+            
+            //maximum number of sqaures we can see through
+            while(counter < 16)
+            {
+            
+            
+                if (scanAngle <= 270 && scanAngle > 180) // top left
+                {
+                    distance1 = (pixelx) / Math.cos((scanAngle+90) * toRadians)
+                    distance2 = pixely / Math.sin((scanAngle-90) * toRadians) //correct
+                    if (distance1 > distance2) 
+                    {
+                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquarey--;
+                        pixely = pixely + boxHeight;
+
+                      
+                    }
+                    if (distance2 > distance1) 
+                    {
+                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquarex--;
+                        pixelx = pixelx + boxWidth;
+
+                    }
+                 }
+                
+                if (scanAngle <= 180 && scanAngle > 90) //top right
+                {
+                    distance1 = (boxWidth - pixelx) / Math.sin(scanAngle * toRadians)
+                    distance2 = pixely / Math.sin((scanAngle-90) * toRadians)
+                    if (distance1 > distance2) 
+                    {
+                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquarey--;
+                        pixely = pixely + boxHeight;
+
+                    }                    
+                    if (distance2 > distance1) 
+                    {
+                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquarex++;
+                        pixelx = pixelx - boxWidth; 
+                     
+                    }
+                }        
+
+
+                if (scanAngle >= 0 && scanAngle <= 90) //bottom right
+                {
+                    distance1 = (boxWidth - pixelx) / Math.cos((scanAngle-90) * toRadians) //correct
+                    distance2 = (boxHeight - pixely) / Math.sin((scanAngle+90) * toRadians)     
+                    if (distance1 > distance2) 
+                    {
+                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquarey++;
+                        pixely = pixely - boxHeight;                   
+
+                    }
+                    if (distance2 > distance1) 
+                    {
+                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquarex++;
+                        pixelx = pixelx - boxWidth; 
+                        
+                    }
+                } 
+                
+                if (scanAngle > 270 && scanAngle <= 360) // bottom left
+                {
+                    distance1 = (pixelx) / Math.cos((scanAngle+90) * toRadians) //correct
+                    distance2 = (boxHeight - pixely) / Math.sin((scanAngle+90) * toRadians)
+                    if (distance1 > distance2) 
+                    {
+                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquarey++;
+                        pixely = pixely - boxHeight; 
+
+                    }
+                    if (distance2 > distance1) 
+                    {
+                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquarex--;
+                        pixelx = pixelx + boxWidth; 
+                                        
+                    }
+                } 
+                
+
+                
+                if (arr[checkSquare] == 0)
+                {
+                    if (distance1 > distance2)
+                    {
+                        distance = distance2;// + distance2;
+                        ctx.fillStyle = "#0000CC";
+                    }
+                    if (distance2 > distance1) 
+                    {
+                        distance = distance1;// + distance1;
+                        ctx.fillStyle = "#0000FF";
+                    }
+                
+                }else
+                {
+                    counter=100;
+                }
+                
+                
+
+
+
+                counter++;
+            }
+            
+            
+            
+            
+            //raycasts on map
+            lookxscan = this.x + (distance * Math.sin((scanAngle + 0) * toRadians));
+            lookyscan = this.y + (distance * Math.cos((scanAngle + 0) * toRadians));
+            ctx.moveTo(this.x,this.y);
+            ctx.lineTo(lookxscan,lookyscan)      
+            
+            
+            
+            
+            straightner = Math.sin(((scanCounter + (fov/2)) * 2) * toRadians) * 33;
+ 
+            
+            screenBar = (scanCounter + (fov/2)) * (800/fov)
+            screenBar = 1600 - screenBar;
+
+
+
+
+            
+            ctx.fillRect(screenBar,(distance/2.667)+straightner, 10,     (600-(distance/2.667)-straightner) - ((distance/2.667)+straightner)                            );
+
+            
+  
+            
+            
+            
+            ctx.stroke();
+            
+            
+            scanCounter = scanCounter+1;
+        
+        }
+        
+        
+        
+       // debug = distance;
+        
+        ctx.font = "30px Arial";
+        ctx.strokeStyle = "#000000";
+        ctx.strokeText("X=" + Math.round(this.x) + " Y=" + Math.round(this.y) + " Angle=" + Math.round(this.angle) + " Square="  + sqaure, 10, 50);
+        ctx.strokeText("Debug = " + debug , 10, 100);
+        
+        
+        
+        
+        x = 0
+        y = 0
+
+        
+        counter = 0
+        
+        while(y < 8)
+        {
+            x = 0;
+            while(x < 8)
+            {
+                ctx.beginPath();
+                posinarray = x + (y * 8)
+                
+                if (arr[posinarray] >= 1) ctx.strokeStyle = "#0000FF";
+                if (arr[posinarray] == 0) ctx.strokeStyle = "#cccccc";
+                
+                
+                ctx.rect((x * boxWidth) + 3, (y * boxHeight ) + 3, boxWidth - 3 , boxHeight  - 3);
+                ctx.stroke(); 
+                
+                ctx.font = "10px Arial";
+                ctx.strokeStyle = "#999999";
+                ctx.strokeText(counter , (x * boxWidth)+ 7, (y * boxHeight ) + 15);
+                 
+                x++;
+                counter++;
+            }
+        
+            y++;
+
+        }
+
+        
+
+    }
+    this.newPos = function() {
+    
+    }    
+}
+
+function updateGameArea() {
+    myGameArea.clear();
+    myGamePiece.newPos();    
+    myGamePiece.update();
+
+}
+
+
+document.onkeydown = checkKey;
+
+function checkKey(e) {
+
+    e = e || window.event;
+
+    if (e.keyCode == '38') {
+        C = 20
+        
+        a = Math.sin(myGamePiece.angle * toRadians) * C
+        b = Math.cos(myGamePiece.angle * toRadians) * C
+        
+        myGamePiece.x = myGamePiece.x + a; 
+        myGamePiece.y = myGamePiece.y + b; 
+    }
+    else if (e.keyCode == '40') {
+        C = 20
+        
+        a = Math.sin(myGamePiece.angle * toRadians) * C
+        b = Math.cos(myGamePiece.angle * toRadians) * C
+        
+        myGamePiece.x = myGamePiece.x - a; 
+        myGamePiece.y = myGamePiece.y - b; 
+    }
+    else if (e.keyCode == '37') {
+        myGamePiece.angle = myGamePiece.angle + 10; 
+        if (myGamePiece.angle > 360) myGamePiece.angle = myGamePiece.angle - 360
+    }
+    else if (e.keyCode == '39') {
+        myGamePiece.angle = myGamePiece.angle - 10; 
+        if (myGamePiece.angle < 0) myGamePiece.angle = myGamePiece.angle + 360
+    }
+
+}
+
+
+function moveup() {
+    C = 10
+    
+    a = Math.sin(myGamePiece.angle * toRadians) * C
+    b = Math.cos(myGamePiece.angle * toRadians) * C
+    
+    myGamePiece.x = myGamePiece.x + a; 
+    myGamePiece.y = myGamePiece.y + b; 
+}
+
+function movedown() {
+    C = 10
+    
+    a = Math.sin(myGamePiece.angle * toRadians) * C
+    b = Math.cos(myGamePiece.angle * toRadians) * C
+    
+    myGamePiece.x = myGamePiece.x - a; 
+    myGamePiece.y = myGamePiece.y - b; 
+}
+
+function moveleft() {
+    myGamePiece.angle = myGamePiece.angle + 30;   
+    if (myGamePiece.angle > 360) myGamePiece.angle = myGamePiece.angle - 360
+}
+
+function moveright() {
+    myGamePiece.angle = myGamePiece.angle - 30; 
+    if (myGamePiece.angle < 0) myGamePiece.angle = myGamePiece.angle + 360
+}
+</script>
+
+<br><br>
+<div style="text-align:center;width:1600px;">
+  <button onclick="moveup()">UP</button><br><br>
+  <button onclick="moveleft()">LEFT</button>
+  <button onclick="moveright()">RIGHT</button><br><br>
+  <button onclick="movedown()">DOWN</button>
+</div>
+
+</body>
+</html>
