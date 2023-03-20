@@ -16,12 +16,25 @@ var myGamePiece;
 
 //globals
 const toRadians = 0.017453;
-
+    const arr = [
+    1,1,1,1,1,1,1,1,1,
+    1,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,1,
+    1,0,1,1,0,0,0,0,1,
+    1,0,1,1,0,0,0,0,1,    
+    1,0,1,1,0,0,0,0,1,    
+    1,1,1,1,1,1,1,1,1
+    ];
+    
+    boxSide = Math.sqrt(arr.length);
 
 function startGame() {
     myGamePiece = new component(380,320);
     myGameArea.start();
 }
+
 
 var myGameArea = {
     canvas : document.createElement("canvas"),
@@ -39,25 +52,18 @@ var myGameArea = {
     }
 }
 
-
+//left and right distortion
+//movement check
 
 function component(x, y) {
     
     this.x = x;
     this.y = y;    
-    this.angle = 180;
+    this.angle = 0;
+    consoleCount = 0;
 
+    //must be a square map
 
-    const arr = [
-    1,1,1,1,1,1,1,1,
-    1,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,1,
-    1,0,1,0,0,2,0,1,
-    1,0,0,0,0,1,0,1,    
-    1,1,1,1,1,1,1,1
-    ];
     
     
     
@@ -65,18 +71,35 @@ function component(x, y) {
     {
         ctx = myGameArea.context;
         ctx.beginPath();
-        ctx.strokeStyle = "#FF0000";
-        debug = "";
-
-
-
-        boxWidth = (myGameArea.context.canvas.width / 2) / 8
-        boxHeight = (myGameArea.context.canvas.height) / 8
+        
+        //skybox
+        grd = ctx.createLinearGradient(0, 700, 0, 0);
+        grd.addColorStop(0, "#008800");
+        grd.addColorStop(1, "#00FF44");
+        ctx.fillStyle = grd;
+        ctx.fillRect(800, 300, 1600, 300);
+        grd = ctx.createLinearGradient(0, 75, 0, 0);
+        grd.addColorStop(1, "#4444CC");
+        grd.addColorStop(0, "#4488FF");
+        ctx.fillStyle = grd;
+        ctx.fillRect(800, 0, 1600, 300);
 
         
-        sqaurex = Math.round((this.x / (myGameArea.context.canvas.width / 2)) * 8 + 0.5) - 1
-        sqaurey = (Math.round(((this.y / myGameArea.context.canvas.height) * 8)+ 0.5)) - 1 ;
-        sqaure = sqaurex + (sqaurey * 8);
+        ctx.strokeStyle = "#FF0000";
+        debug = "";
+        
+        
+        
+
+
+
+        boxWidth = (myGameArea.context.canvas.width / 2) / boxSide
+        boxHeight = (myGameArea.context.canvas.height) / boxSide
+
+        
+        sqaurex = Math.round((this.x / (myGameArea.context.canvas.width / 2)) * boxSide + 0.5) - 1
+        sqaurey = (Math.round(((this.y / myGameArea.context.canvas.height) * boxSide)+ 0.5)) - 1 ;
+        sqaure = sqaurex + (sqaurey * boxSide);
 
       
         
@@ -92,23 +115,33 @@ function component(x, y) {
         scanAngle = this.angle + scanCounter;
 
         
-        while(scanCounter < (fov/2))
+        while(scanCounter < (fov/2)+1)//((fov/2)+1))
         {
             distance = 0;
             distance1 = 0;
             distance2 = 0;
+            direction = "";
 
             
+            //scanAngle = scanAngle + 0.25;
             scanAngle = scanAngle + 1;
+            
             if (scanAngle > 360) scanAngle = scanAngle - 360;
             if (scanAngle < 0) scanAngle = scanAngle + 360;
             
 
+            tempx = this.x + Math.sin((this.angle + 90) * toRadians) * (4 * scanCounter);
+            tempy = this.y + Math.cos((this.angle + 90) * toRadians) * (4 * scanCounter);
             
-            pixelx =  this.x - (boxWidth * sqaurex );
-            pixely =  this.y - (boxHeight * sqaurey );
-            
-            
+            pixelx =  tempx - (boxWidth * sqaurex );
+            pixely =  tempy - (boxHeight * sqaurey );
+           //move these across
+
+    
+
+    
+    
+
             counter = 0;
             checkSquarex = sqaurex;
             checkSquarey = sqaurey;
@@ -119,84 +152,92 @@ function component(x, y) {
             {
             
             
-                if (scanAngle <= 270 && scanAngle > 180) // top left
+                if (this.angle <= 270 && this.angle > 180) // top left
                 {
-                    distance1 = (pixelx) / Math.cos((scanAngle+90) * toRadians)
-                    distance2 = pixely / Math.sin((scanAngle-90) * toRadians) //correct
+                    distance1 = (pixelx) / Math.cos((this.angle+90) * toRadians)
+                    distance2 = pixely / Math.sin((this.angle-90) * toRadians) //correct
                     if (distance1 > distance2) 
                     {
-                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquare = checkSquarex + (checkSquarey * boxSide);
                         checkSquarey--;
                         pixely = pixely + boxHeight;
+                        direction = "up";
 
                       
                     }
                     if (distance2 > distance1) 
                     {
-                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquare = checkSquarex + (checkSquarey * boxSide);
                         checkSquarex--;
                         pixelx = pixelx + boxWidth;
+                        direction = "left"
 
                     }
                  }
                 
-                if (scanAngle <= 180 && scanAngle > 90) //top right
+                if (this.angle <= 180 && this.angle > 90) //top right
                 {
-                    distance1 = (boxWidth - pixelx) / Math.sin(scanAngle * toRadians)
-                    distance2 = pixely / Math.sin((scanAngle-90) * toRadians)
+                    distance1 = (boxWidth - pixelx) / Math.sin(this.angle * toRadians)
+                    distance2 = pixely / Math.sin((this.angle-90) * toRadians)
                     if (distance1 > distance2) 
                     {
-                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquare = checkSquarex + (checkSquarey * boxSide);
                         checkSquarey--;
                         pixely = pixely + boxHeight;
+                        direction = "up";
 
                     }                    
                     if (distance2 > distance1) 
                     {
-                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquare = checkSquarex + (checkSquarey * boxSide);
                         checkSquarex++;
                         pixelx = pixelx - boxWidth; 
+                        direction = "right";
                      
                     }
                 }        
 
 
-                if (scanAngle >= 0 && scanAngle <= 90) //bottom right
+                if (this.angle >= 0 && this.angle <= 90) //bottom right
                 {
-                    distance1 = (boxWidth - pixelx) / Math.cos((scanAngle-90) * toRadians) //correct
-                    distance2 = (boxHeight - pixely) / Math.sin((scanAngle+90) * toRadians)     
+                    distance1 = (boxWidth - pixelx) / Math.cos((this.angle-90) * toRadians) //correct
+                    distance2 = (boxHeight - pixely) / Math.sin((this.angle+90) * toRadians)     
                     if (distance1 > distance2) 
                     {
-                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquare = checkSquarex + (checkSquarey * boxSide);
                         checkSquarey++;
                         pixely = pixely - boxHeight;                   
+                        direction = "down";
 
                     }
                     if (distance2 > distance1) 
                     {
-                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquare = checkSquarex + (checkSquarey * boxSide);
                         checkSquarex++;
                         pixelx = pixelx - boxWidth; 
+                        direction = "right";
                         
                     }
                 } 
                 
-                if (scanAngle > 270 && scanAngle <= 360) // bottom left
+                if (this.angle > 270 && this.angle <= 360) // bottom left
                 {
-                    distance1 = (pixelx) / Math.cos((scanAngle+90) * toRadians) //correct
-                    distance2 = (boxHeight - pixely) / Math.sin((scanAngle+90) * toRadians)
+                    distance1 = (pixelx) / Math.cos((this.angle+90) * toRadians) //correct
+                    distance2 = (boxHeight - pixely) / Math.sin((this.angle+90) * toRadians)
                     if (distance1 > distance2) 
                     {
-                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquare = checkSquarex + (checkSquarey * boxSide);
                         checkSquarey++;
                         pixely = pixely - boxHeight; 
+                        direction = "down";
 
                     }
                     if (distance2 > distance1) 
                     {
-                        checkSquare = checkSquarex + (checkSquarey * 8);
+                        checkSquare = checkSquarex + (checkSquarey * boxSide);
                         checkSquarex--;
                         pixelx = pixelx + boxWidth; 
+                        direction = "left";
                                         
                     }
                 } 
@@ -208,21 +249,25 @@ function component(x, y) {
                     if (distance1 > distance2)
                     {
                         distance = distance2;// + distance2;
-                        ctx.fillStyle = "#0000CC";
+                        ctx.fillStyle = "#AAAAAA";
+
+
+                                    
                     }
                     if (distance2 > distance1) 
                     {
                         distance = distance1;// + distance1;
-                        ctx.fillStyle = "#0000FF";
+                        ctx.fillStyle = "#BBBBBB";
+
+                        
                     }
                 
                 }else
                 {
+                    //we have found a wall so stop trying to look through it
                     counter=100;
                 }
                 
-                
-
 
 
                 counter++;
@@ -230,43 +275,77 @@ function component(x, y) {
             
             
             
+
+     
             
-            //raycasts on map
+            
+            //Red raycasts on map
+            ctx.beginPath();
+            ctx.strokeStyle = "#FF0000";
             lookxscan = this.x + (distance * Math.sin((scanAngle + 0) * toRadians));
             lookyscan = this.y + (distance * Math.cos((scanAngle + 0) * toRadians));
-            ctx.moveTo(this.x,this.y);
-            ctx.lineTo(lookxscan,lookyscan)      
+            //ctx.moveTo(this.x,this.y);
+            //ctx.lineTo(lookxscan,lookyscan)     
+            ctx.stroke();             
             
             
             
             
-            straightner = Math.sin(((scanCounter + (fov/2)) * 2) * toRadians) * 33;
- 
             
-            screenBar = (scanCounter + (fov/2)) * (800/fov)
-            screenBar = 1600 - screenBar;
+            
+            //Blue Raycasts
+            //x and y start coordintates
+            lookxscan1 = tempx + (distance * Math.sin((this.angle + 0) * toRadians));
+            lookyscan1 = tempy + (distance * Math.cos((this.angle + 0) * toRadians));
+            
+            //x and y finsih coordintates
+            lookxscan2 = tempx + (distance * (Math.sin((  this.angle +0 ) * toRadians)) * 1);
+            lookyscan2 = tempy + (distance * (Math.cos((  this.angle +0) * toRadians)) * 1);       
+            
+            ctx.beginPath();
+            ctx.strokeStyle = "#0000FF";            
+            ctx.moveTo(tempx,tempy);
+            ctx.lineTo(lookxscan1,lookyscan1)         
+            ctx.stroke(); 
+            
+            
+            
+            
+            
+            
+            
+            
+            
+
+            
+           // distance =   distance *  (Math.cos((this.angle - scanAngle) * toRadians) ) ;
+            
+          
+            
+
+            //           -45 to 45      90/2       800/90
+            //                0      +   45     *  8            (360 - 720)
+            //screenBar = (scanCounter + (fov/2)) * (800/fov)
+            // (880 - 1240)
+            //screenBar = 1600 - screenBar;
+            
+            //i want screenbar to be 800 - 1600 in 90 steps
+            screenBar = 1600 - (((scanCounter + (fov/2)) * (800/fov)) );
+            distance = distance/3;
 
 
+            ctx.fillRect(screenBar,(distance) , 10,     (600-(distance) ) - ((distance)) );   
 
-
-            
-            ctx.fillRect(screenBar,(distance/2.667)+straightner, 10,     (600-(distance/2.667)-straightner) - ((distance/2.667)+straightner)                            );
-
-            
-  
-            
-            
-            
-            ctx.stroke();
-            
+            //ctx.moveTo(screenBar,(distance));
+            //ctx.lineTo(screenBar,300)     
+            ctx.stroke();            
             
             scanCounter = scanCounter+1;
         
         }
         
-        
-        
-       // debug = distance;
+      
+
         
         ctx.font = "30px Arial";
         ctx.strokeStyle = "#000000";
@@ -282,13 +361,13 @@ function component(x, y) {
         
         counter = 0
         
-        while(y < 8)
+        while(y < boxSide)
         {
             x = 0;
-            while(x < 8)
+            while(x < boxSide)
             {
                 ctx.beginPath();
-                posinarray = x + (y * 8)
+                posinarray = x + (y * boxSide)
                 
                 if (arr[posinarray] >= 1) ctx.strokeStyle = "#0000FF";
                 if (arr[posinarray] == 0) ctx.strokeStyle = "#cccccc";
@@ -336,9 +415,33 @@ function checkKey(e) {
         
         a = Math.sin(myGamePiece.angle * toRadians) * C
         b = Math.cos(myGamePiece.angle * toRadians) * C
+
+     
+        boxWidth = (myGameArea.context.canvas.width / 2) / boxSide
+        boxHeight = (myGameArea.context.canvas.height) / boxSide
+
+            
+        squarex = Math.round((  (myGamePiece.x + a) / (myGameArea.context.canvas.width / 2)  ) * boxSide + 0.5) - 1;
+        squarey = Math.round((  (myGamePiece.y + b) / (myGameArea.context.canvas.height   )  ) * boxSide + 0.5) - 1;
+
+
         
-        myGamePiece.x = myGamePiece.x + a; 
-        myGamePiece.y = myGamePiece.y + b; 
+        square = squarex + (squarey * boxSide);
+        
+        if (arr[square] == 0) //if the next square is empty
+        {
+            myGamePiece.y = myGamePiece.y + b;         
+            myGamePiece.x = myGamePiece.x + a; 
+        }
+
+
+
+
+            
+        console.log(square);
+
+        
+        
     }
     else if (e.keyCode == '40') {
         C = 20
@@ -366,6 +469,9 @@ function moveup() {
     
     a = Math.sin(myGamePiece.angle * toRadians) * C
     b = Math.cos(myGamePiece.angle * toRadians) * C
+    
+    
+
     
     myGamePiece.x = myGamePiece.x + a; 
     myGamePiece.y = myGamePiece.y + b; 
